@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#c8900a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OPTCG">
+<title>OPTCG Manager</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--gold:#c8900a;--gold-light:#FAC775;--gold-bg:#18120a;--gold-text:#FAC775;--bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;--bg4:#2a2a2a;--text:#f0ede8;--text2:#a09a92;--text3:#5a5550;--border:#2a2a2a;--border2:#3a3a3a;--purple:#7F77DD;--purple-bg:#1a1830;--teal:#1D9E75;--teal-bg:#0a1e18;--danger:#E24B4A;--danger-bg:#1e0a0a;--r:12px;--rs:8px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:52px 20px 14px;background:var(--bg);border-bottom:.5px solid var(--border)}
+.title{font-size:18px;font-weight:700;letter-spacing:-.3px}.sub{font-size:11px;color:var(--text3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
+.ticon{width:38px;height:38px;border-radius:50%;background:var(--gold-bg);border:1px solid #3a2a10;display:flex;align-items:center;justify-content:center}
+.ticon i{font-size:18px;color:var(--gold)}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg);border-top:.5px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nb{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 12px;background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);letter-spacing:.3px;text-transform:uppercase;border-top:2px solid transparent}
+.nb.on{color:var(--gold);border-top-color:var(--gold)}.nb i{font-size:22px}
+.view{display:none;flex:1;flex-direction:column;overflow:hidden}.view.on{display:flex}
+.scroll{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch}.scroll::-webkit-scrollbar{display:none}
+/* CAM */
+.cam-wrap{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:3/4;width:100%}
+#camVideo{width:100%;height:100%;object-fit:cover}#camCanvas{display:none}
+.cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%)}
+.cc{position:absolute;width:28px;height:28px;border-color:var(--gold);border-style:solid;border-width:0;border-radius:2px}
+.cc-tl{top:16px;left:16px;border-top-width:2.5px;border-left-width:2.5px}.cc-tr{top:16px;right:16px;border-top-width:2.5px;border-right-width:2.5px}
+.cc-bl{bottom:56px;left:16px;border-bottom-width:2.5px;border-left-width:2.5px}.cc-br{bottom:56px;right:16px;border-bottom-width:2.5px;border-right-width:2.5px}
+.snap-btn{width:64px;height:64px;border-radius:50%;background:var(--gold);border:3px solid rgba(255,255,255,.3);cursor:pointer;display:flex;align-items:center;justify-content:center}.snap-btn:active{transform:scale(.92)}.snap-btn i{font-size:28px;color:#000}
+.cam-hint{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:10px;text-align:center}
+.cam-status{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:var(--gold);font-size:12px;padding:5px 14px;border-radius:20px;white-space:nowrap;font-weight:600;letter-spacing:.3px}
+.cam-off{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);aspect-ratio:3/4;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.cam-off i{font-size:48px;color:var(--text3)}.cam-off p{font-size:14px;color:var(--text2);text-align:center;line-height:1.5;padding:0 20px}
+/* RESULT */
+.result{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:16px;margin-top:12px;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.rh{display:flex;gap:14px;margin-bottom:14px}
+.cimg{width:80px;height:112px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg3);position:relative;cursor:pointer}
+.cimg img{width:100%;height:100%;object-fit:cover}
+.cph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.cph i{font-size:24px;color:var(--text3)}.cph span{font-size:8px;color:var(--text3);text-align:center;padding:0 4px}
+.alt-dot{position:absolute;bottom:4px;right:4px;background:var(--gold);color:#000;font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px}
+.cmeta{flex:1;min-width:0}
+.cn{font-size:16px;font-weight:700;letter-spacing:-.3px}.ccode{font-size:11px;color:var(--text3);margin:2px 0 8px;letter-spacing:.3px}
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.bp{background:var(--purple-bg);color:var(--purple);border:.5px solid #3a357a}
+.bg{background:var(--gold-bg);color:var(--gold-text);border:.5px solid #3a2a10}
+.bt{background:var(--teal-bg);color:var(--teal);border:.5px solid #0f3025}
+.bd{background:var(--danger-bg);color:var(--danger);border:.5px solid #3a1010}
+.ebox{background:var(--bg3);border-radius:var(--rs);padding:10px 12px;border:.5px solid var(--border);margin-bottom:10px}
+.elabel{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.etext{font-size:12px;color:var(--text2);line-height:1.6}
+.prow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.pc{background:var(--bg3);border-radius:var(--rs);padding:10px 12px;border:.5px solid var(--border)}
+.pl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.pv{font-size:18px;font-weight:700;letter-spacing:-.5px}
+.up{color:var(--teal)}.down{color:var(--danger)}
+/* ALTS */
+.alts-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}.alts-row::-webkit-scrollbar{display:none}
+.alt-c{flex-shrink:0;width:56px;cursor:pointer}.alt-c img{width:56px;height:78px;border-radius:6px;object-fit:cover;border:2px solid transparent}.alt-c.on img{border-color:var(--gold)}.alt-c span{display:block;font-size:9px;color:var(--text3);text-align:center;margin-top:3px}
+/* SYN */
+.syn-title{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.syn-list{display:flex;flex-direction:column;gap:7px}
+.syn-item{display:flex;align-items:center;gap:10px;background:var(--bg3);border-radius:var(--rs);padding:9px 11px;border:.5px solid var(--border);cursor:pointer}
+.syn-img{width:38px;height:53px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg4)}
+.syn-info{flex:1;min-width:0}
+.syn-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.syn-why{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+.syn-score{font-size:11px;font-weight:700;color:var(--gold);flex-shrink:0}
+.add-btn{width:100%;padding:12px;border-radius:var(--rs);background:var(--gold-bg);color:var(--gold-text);border:1px solid #3a2a10;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px}
+.add-btn:active{background:#1e1500}
+/* SEARCH */
+.irow{display:flex;gap:8px;margin-bottom:12px}
+.inp{flex:1;padding:11px 14px;border-radius:var(--rs);border:.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;outline:none}
+.inp:focus{border-color:var(--gold)}
+.btn{padding:11px 18px;border-radius:var(--rs);background:var(--gold);color:#000;border:none;cursor:pointer;font-size:14px;font-weight:700}.btn:active{opacity:.8}
+/* BAUL */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.st{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rs);padding:12px 14px}
+.sl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}.sv{font-size:22px;font-weight:700;letter-spacing:-.5px}
+.chips{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}.chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 14px;border-radius:20px;border:.5px solid var(--border2);background:none;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--text2);font-weight:500}.chip.on{background:var(--gold-bg);border-color:#3a2a10;color:var(--gold-text)}
+.ci{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;margin-bottom:7px}
+.ci-img{width:40px;height:56px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--bg3)}
+.ci-info{flex:1;min-width:0}.ci-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ci-code{font-size:11px;color:var(--text3);margin-top:1px}
+.qr{display:flex;align-items:center;gap:7px;margin-top:5px}
+.qb{width:24px;height:24px;border-radius:50%;border:.5px solid var(--border2);background:var(--bg3);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.qn{font-size:12px;font-weight:700;min-width:18px;text-align:center;color:var(--gold)}
+.ci-r{text-align:right;flex-shrink:0}.ci-price{font-size:13px;font-weight:700}.ci-pu{font-size:10px;color:var(--text3);margin-top:2px}
+/* DECKS */
+.tbr{display:flex;gap:6px;margin-bottom:14px}
+.tb{padding:7px 16px;border-radius:20px;border:.5px solid var(--border2);background:none;cursor:pointer;font-size:12px;color:var(--text2);font-weight:500}.tb.on{background:var(--gold-bg);border-color:#3a2a10;color:var(--gold-text)}
+.dc{background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px}
+.dt{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.dn{font-size:15px;font-weight:700;letter-spacing:-.3px}.ds{font-size:11px;color:var(--text3);margin-top:3px}
+.wr{font-size:12px;padding:4px 11px;border-radius:20px;font-weight:700;background:var(--teal-bg);color:var(--teal);border:.5px solid #0f3025}
+.pb{height:3px;border-radius:2px;background:var(--bg4);margin:10px 0 6px;overflow:hidden}.pf{height:100%;border-radius:2px;background:var(--gold)}
+.df{display:flex;align-items:center;justify-content:space-between}.dm{font-size:11px;color:var(--text3)}.dm b{color:var(--danger)}
+.tier{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.t1{background:var(--teal-bg);color:var(--teal);border:.5px solid #0f3025}
+.t2{background:#0a0f1e;color:#378ADD;border:.5px solid #0c2045}
+.t3{background:var(--gold-bg);color:var(--gold);border:.5px solid #3a2a10}
+.das{display:flex;gap:6px;margin-top:12px}.bs{flex:1;padding:9px;border-radius:var(--rs);background:var(--bg3);border:.5px solid var(--border2);cursor:pointer;font-size:12px;color:var(--text2);text-align:center;font-weight:500}
+/* IA */
+.ai-wrap{display:flex;flex-direction:column;height:100%}
+.ai-msgs{flex:1;overflow-y:auto;padding:16px}.ai-msgs::-webkit-scrollbar{display:none}
+.ab{border-radius:var(--r);padding:12px 14px;margin-bottom:10px;font-size:14px;line-height:1.6;animation:fu .2s ease}
+.ab-bot{background:var(--bg2);border:.5px solid var(--border)}.ab-user{background:var(--gold-bg);border:.5px solid #3a2a10;margin-left:32px}
+.aw{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}.aw-b{color:var(--gold)}.aw-u{color:var(--gold-text)}
+.ai-bar{display:flex;gap:8px;padding:12px 16px;border-top:.5px solid var(--border);background:var(--bg);padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.ai-bar input{flex:1;padding:11px 14px;border-radius:var(--rs);border:.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;outline:none}
+.ai-bar input:focus{border-color:var(--gold)}
+.send{width:42px;height:42px;border-radius:var(--rs);background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send i{font-size:18px;color:#000}
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.mc{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--r);padding:16px;max-width:340px;width:100%;max-height:88vh;overflow-y:auto}.mc::-webkit-scrollbar{display:none}
+.mc-close{float:right;background:none;border:none;cursor:pointer;font-size:22px;color:var(--text2);margin:-4px -4px 8px 0}
+.mc-img{width:100%;border-radius:8px;margin-bottom:14px}
+/* KEY MODAL */
+.km{background:var(--bg2);border:.5px solid var(--border2);border-radius:var(--r);padding:20px;max-width:320px;width:100%}
+.km h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.km p{font-size:13px;color:var(--text2);line-height:1.5;margin-bottom:14px}
+.km input{width:100%;padding:11px 14px;border-radius:var(--rs);border:.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;outline:none;margin-bottom:10px}
+/* UTILS */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);color:var(--text);font-size:13px;padding:9px 20px;border-radius:20px;z-index:200;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;border:.5px solid var(--border2)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text2);font-size:14px}
+@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .8s linear infinite;display:inline-block}
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}.empty i{font-size:40px;display:block;margin-bottom:12px}.empty p{font-size:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div><div class="title">OPTCG Manager</div><div class="sub">One Piece Card Game</div></div>
+    <div class="ticon" onclick="openKeyModal()" title="Ajustes Vision IA"><i class="ti ti-settings"></i></div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="view on" id="v-scan">
+    <div class="scroll">
+      <div id="camContainer"></div>
+      <div class="irow" style="margin-top:12px">
+        <input class="inp" id="searchIn" placeholder="Buscar: OP14-060, Doflamingo..." type="text">
+        <button class="btn" onclick="manualSearch()">Buscar</button>
+      </div>
+      <div id="scanResult"></div>
+    </div>
+  </div>
+
+  <!-- BAUL -->
+  <div class="view" id="v-baul">
+    <div class="scroll">
+      <div class="sg">
+        <div class="st"><div class="sl">Cartas</div><div class="sv" id="totC">0</div></div>
+        <div class="st"><div class="sl">Valor estimado</div><div class="sv" id="totV">0€</div></div>
+      </div>
+      <div class="chips">
+        <button class="chip on" onclick="filterCol('all',this)">Todas</button>
+        <button class="chip" onclick="filterCol('Purple',this)">Morado</button>
+        <button class="chip" onclick="filterCol('OP14',this)">OP14</button>
+        <button class="chip" onclick="filterCol('OP10',this)">OP10</button>
+      </div>
+      <div id="colList"><div class="empty"><i class="ti ti-package"></i><p>Baul vacio.<br>Escanea cartas para empezar.</p></div></div>
+    </div>
+  </div>
+
+  <!-- MAZOS -->
+  <div class="view" id="v-decks">
+    <div class="scroll">
+      <div class="tbr">
+        <button class="tb on" onclick="deckTab('suggest',this)">Sugeridos</button>
+        <button class="tb" onclick="deckTab('create',this)">Crear</button>
+      </div>
+      <div id="tab-suggest">
+        <div id="deckList"><div class="empty"><i class="ti ti-cards"></i><p>Anade cartas a tu baul para ver mazos.</p></div></div>
+      </div>
+      <div id="tab-create" style="display:none">
+        <div style="background:var(--bg2);border:.5px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px">
+          <div class="elabel" style="margin-bottom:8px">Lider</div>
+          <select id="deckLeader" style="width:100%;padding:10px 12px;border-radius:var(--rs);border:.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;outline:none">
+            <option value="OP14-060">OP14-060 — Doflamingo (Morado)</option>
+            <option value="OP15-058">OP15-058 — Enel (Morado)</option>
+            <option value="OP14-020">OP14-020 — Mihawk (Verde)</option>
+          </select>
+        </div>
+        <button class="btn" style="width:100%;padding:13px;font-size:15px" onclick="genDeck()">Generar mazo optimo con IA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- IA -->
+  <div class="view" id="v-ia">
+    <div class="ai-wrap">
+      <div class="ai-msgs" id="aiMsgs">
+        <div class="ab ab-bot"><div class="aw aw-b">Asistente OPTCG</div>Hola! Soy tu asistente para One Piece TCG. Puedo analizar tu coleccion, consultar precios, sugerirte mazos meta OP15 y responder dudas sobre cartas y sinergias. Que necesitas?</div>
+      </div>
+      <div class="ai-bar">
+        <input id="aiIn" placeholder="Pregunta algo sobre OPTCG..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="send" onclick="sendMsg()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nb on" onclick="goNav('scan',this)"><i class="ti ti-scan"></i>Escaner</button>
+    <button class="nb" onclick="goNav('baul',this)"><i class="ti ti-package"></i>Baul</button>
+    <button class="nb" onclick="goNav('decks',this)"><i class="ti ti-cards"></i>Mazos</button>
+    <button class="nb" onclick="goNav('ia',this)"><i class="ti ti-sparkles"></i>IA</button>
+  </nav>
+</div>
+
+<!-- MODAL CARTA -->
+<div class="modal" id="cardModal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="mc" id="modalContent"></div>
+</div>
+
+<!-- MODAL API KEY -->
+<div class="modal" id="keyModal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="km">
+    <button class="mc-close" onclick="document.getElementById('keyModal').classList.remove('on')"><i class="ti ti-x"></i></button>
+    <h3>Vision IA — Identificar cartas</h3>
+    <p>Para identificar cartas con la camara, necesitas tu API Key de Anthropic. Es gratuita hasta un limite de uso mensual.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Consiguela en: <span style="color:var(--gold)">console.anthropic.com</span></p>
+    <input id="keyInput" type="password" placeholder="sk-ant-...">
+    <button class="btn" style="width:100%" onclick="saveKey()">Guardar y activar Vision IA</button>
+    <button class="bs" style="width:100%;margin-top:8px;padding:10px" onclick="document.getElementById('keyModal').classList.remove('on')">Continuar sin Vision IA (modo demo)</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =========================================================
+// DATOS DE CARTAS
+// =========================================================
+const DB = {
+  'OP14-060':{n:'Donquixote Doflamingo',c:'L',pow:'5000',col:'Purple',set:'OP14',t:'Leader',r:'L',cls:'Warlord',ctr:null,
+    fx:'[Activate:Main][Once Per Turn] Trash 1 card from hand: Look top 5, reveal 1 {Donquixote Pirates} to hand, rest to bottom.',
+    fxES:'[Activar:Principal][Una vez por turno] Descarta 1 carta de tu mano: Mira las 5 superiores del mazo; revela 1 {Piratas Donquixote} y aniadela a tu mano, el resto al fondo.',
+    price:0.15,ch:+2.1,dir:'up',alts:['OP14-060_p1'],syn:['OP10-065','OP14-067','OP14-061','OP14-074','OP10-071','OP13-076']},
+  'OP10-065':{n:'Sugar',c:'1',pow:'1000',col:'Purple',set:'OP10',t:'Character',r:'R',cls:'Donquixote Pirates',ctr:2000,
+    fx:'[On Play] Look top 3; reveal 1 {Donquixote Pirates} (not Sugar) to hand, rest to bottom.',
+    fxES:'[Al jugar] Mira las 3 superiores del mazo; revela 1 {Piratas Donquixote} (no Sugar) y aniadela a tu mano, el resto al fondo.',
+    price:4.56,ch:-8.3,dir:'down',alts:[],syn:['OP14-060','OP14-067','OP14-063']},
+  'OP14-067':{n:'Dellinger',c:'2',pow:'3000',col:'Purple',set:'OP14',t:'Character',r:'C',cls:'Donquixote Pirates',ctr:1000,
+    fx:'[On K.O.] Play up to 1 {Donquixote Pirates} with cost 2 or less from hand.',
+    fxES:'[Al ser eliminado] Juega hasta 1 {Piratas Donquixote} con coste 2 o menos desde tu mano.',
+    price:0.60,ch:+5,dir:'up',alts:[],syn:['OP14-060','OP10-065','OP14-063']},
+  'OP14-061':{n:'Vergo',c:'4',pow:'6000',col:'Purple',set:'OP14',t:'Character',r:'UC',cls:'Donquixote Pirates',ctr:1000,
+    fx:'[Blocker]',fxES:'[Bloqueador] (Cuando tu oponente declara un ataque, puedes descansar esta carta para desviar el ataque hacia ella.)',
+    price:2.20,ch:+12,dir:'up',alts:[],syn:['OP14-060','OP14-068','OP14-074']},
+  'OP14-074':{n:'Monet',c:'5',pow:'5000',col:'Purple',set:'OP14',t:'Character',r:'UC',cls:'Donquixote Pirates',ctr:null,
+    fx:'[On Play][DON!! x1] Trash 1 card from hand: Play 1 {Donquixote Pirates} with cost 4 or less from hand.',
+    fxES:'[Al jugar][DON!! x1] Descarta 1 carta: Juega hasta 1 {Piratas Donquixote} con coste 4 o menos desde tu mano.',
+    price:0.72,ch:-3.1,dir:'down',alts:[],syn:['OP14-060','OP14-061','OP14-068']},
+  'OP10-071':{n:'Donquixote Doflamingo',c:'8',pow:'9000',col:'Purple',set:'OP10',t:'Character',r:'SR',cls:'Donquixote Pirates',ctr:null,
+    fx:"[On Play] KO 1 opponent's Character cost 5 or less. If opponent has 5 or less life, also KO 1 cost 10 or less.",
+    fxES:'[Al jugar] Elimina hasta 1 Personaje del oponente con coste 5 o menos. Si el oponente tiene 5 o menos vida, tambien elimina 1 con coste 10 o menos.',
+    price:15.32,ch:+18.4,dir:'up',alts:['OP10-071_p1'],syn:['OP14-060','OP14-074','OP14-069']},
+  'OP14-069':{n:'Donquixote Doflamingo',c:'10',pow:'10000',col:'Purple',set:'OP14',t:'Character',r:'SR',cls:'Warlord',ctr:null,
+    fx:"[When Attacking][DON!! x2] KO 1 opponent's Character.",
+    fxES:'[Al atacar][DON!! x2] Elimina hasta 1 Personaje del oponente.',
+    price:5.37,ch:+7.2,dir:'up',alts:['OP14-069_p1'],syn:['OP14-060','OP10-071','OP14-074']},
+  'OP13-076':{n:'Divine Departure',c:'0',pow:'-',col:'Purple',set:'OP13',t:'Event',r:'UC',cls:'-',ctr:2000,
+    fx:'Counter: 1 of your Leader/Character gains +2000 power. Opponent cannot play cards from hand this battle.',
+    fxES:'Contador: 1 de tus cartas gana +2000 de poder. El oponente no puede jugar cartas de la mano durante este combate.',
+    price:2.36,ch:-1.5,dir:'down',alts:[],syn:['OP14-060','OP14-061','OP10-071']},
+  'OP14-068':{n:'Trebol',c:'4',pow:'6000',col:'Purple',set:'OP14',t:'Character',r:'C',cls:'Donquixote Pirates',ctr:1000,
+    fx:'[Blocker][On K.O.] Opponent cannot play Events from hand until your next turn.',
+    fxES:'[Bloqueador][Al ser eliminado] El oponente no puede jugar Eventos desde la mano hasta tu siguiente turno.',
+    price:0.26,ch:+0.5,dir:'up',alts:[],syn:['OP14-060','OP14-061','OP14-074']},
+  'OP14-072':{n:'Baby 5',c:'4',pow:'5000',col:'Purple',set:'OP14',t:'Character',r:'C',cls:'Donquixote Pirates',ctr:1000,
+    fx:'[Rush][On Play] Add the top card of deck to top of life cards.',
+    fxES:'[Prisa][Al jugar] Anade la carta superior de tu mazo a tus cartas de vida.',
+    price:0.57,ch:+4.1,dir:'up',alts:[],syn:['OP14-060','OP14-074','OP14-061']},
+  'OP14-063':{n:'Sugar',c:'4',pow:'1000',col:'Purple',set:'OP14',t:'Character',r:'R',cls:'Donquixote Pirates',ctr:null,
+    fx:'[On Play] Look top 5; reveal up to 2 {Donquixote Pirates} (not Sugar) to hand.',
+    fxES:'[Al jugar] Mira las 5 superiores; revela hasta 2 {Piratas Donquixote} (no Sugar) y aniadelas a tu mano.',
+    price:0.72,ch:+9,dir:'up',alts:[],syn:['OP14-060','OP10-065','OP14-067']},
+  'OP07-076':{n:'Slow-Slow Beam Sword',c:'1',pow:'-',col:'Purple',set:'OP07',t:'Event',r:'UC',cls:'-',ctr:2000,
+    fx:'Counter: 1 of your Leader/Character gains +2000 power.',
+    fxES:'Contador: 1 de tus cartas gana +2000 de poder durante este combate.',
+    price:0.40,ch:-0.8,dir:'down',alts:[],syn:['OP14-060','OP14-061']},
+  'OP14-071':{n:'Pica',c:'4',pow:'6000',col:'Purple',set:'OP14',t:'Character',r:'C',cls:'Donquixote Pirates',ctr:1000,
+    fx:'[On Play][DON!! x1] Play 1 cost-1 {Donquixote Pirates} Character from trash.',
+    fxES:'[Al jugar][DON!! x1] Juega 1 Personaje {Piratas Donquixote} de coste 1 desde tu descarte.',
+    price:0.11,ch:+1,dir:'up',alts:[],syn:['OP14-060','OP10-065','OP14-063']},
+  'ST18-001':{n:'Uso-Hachi',c:'3',pow:'4000',col:'Purple',set:'ST18',t:'Character',r:'C',cls:'Donquixote Pirates',ctr:2000,
+    fx:'[On Play] Trash 1 card from hand: Opponent cannot play Events from hand this turn.',
+    fxES:'[Al jugar] Descarta 1 carta: El oponente no puede jugar Eventos desde la mano este turno.',
+    price:15.51,ch:+22,dir:'up',alts:[],syn:['OP14-060','OP13-076','OP14-068']},
+  'OP10-072':{n:'Donquixote Rosinante',c:'5',pow:'6000',col:'Purple',set:'OP10',t:'Character',r:'R',cls:'Donquixote Pirates',ctr:1000,
+    fx:"[On Play] Look top 5; reveal 1 Event to hand. During opponent's next turn, you may play 1 Event from hand.",
+    fxES:"[Al jugar] Mira las 5 superiores; revela 1 Evento a tu mano. Durante el siguiente turno del oponente, puedes jugar 1 Evento desde tu mano.",
+    price:6.78,ch:+6.5,dir:'up',alts:[],syn:['OP14-060','OP13-076','OP07-076']},
+};
+
+const imgURL = code => `https://en.onepiece-cardgame.com/images/cardlist/card/${code}.png`;
+
+// =========================================================
+// ESTADO
+// =========================================================
+let col = JSON.parse(localStorage.getItem('optcg-col')||'{}');
+let CLAUDE_KEY = localStorage.getItem('claude-key')||'';
+let camStream = null;
+let camOn = false;
+const DEMO = Object.keys(DB);
+let demoIdx = 0;
+
+function saveCol(){localStorage.setItem('optcg-col',JSON.stringify(col));}
+function saveKey(){
+  const k = document.getElementById('keyInput').value.trim();
+  if(k){CLAUDE_KEY=k;localStorage.setItem('claude-key',k);toast('Vision IA activada!');document.getElementById('keyModal').classList.remove('on');}
+}
+
+// =========================================================
+// NAV
+// =========================================================
+function goNav(id,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('v-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id!=='scan') stopCam(); else initCam();
+}
+function openKeyModal(){document.getElementById('keyModal').classList.add('on');}
+
+// =========================================================
+// CAMARA REAL
+// =========================================================
+async function initCam(){
+  const box = document.getElementById('camContainer');
+  if(camOn) return;
+  if(!navigator.mediaDevices?.getUserMedia){
+    box.innerHTML=`<div class="cam-off" onclick="initCam()"><i class="ti ti-camera-off"></i><p>Camara no soportada en este navegador.<br>Usa Chrome en Android.</p></div>`;
+    return;
+  }
+  box.innerHTML=`<div class="loading"><i class="ti ti-loader-2 spin"></i> Activando camara...</div>`;
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}},audio:false
+    });
+    camOn=true;
+    box.innerHTML=`
+      <div class="cam-wrap">
+        <video id="camVideo" autoplay playsinline muted></video>
+        <canvas id="camCanvas"></canvas>
+        <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
+        <div class="cc cc-bl"></div><div class="cc cc-br"></div>
+        <span class="cam-status" id="camStatus">${CLAUDE_KEY?'Vision IA activa':'Demo — sin Vision IA'}</span>
+        <div class="cam-overlay">
+          <p class="cam-hint">Centra la carta en el marco y pulsa</p>
+          <button class="snap-btn" onclick="snapPhoto()"><i class="ti ti-camera"></i></button>
+        </div>
+      </div>`;
+    document.getElementById('camVideo').srcObject = camStream;
+  } catch(e){
+    camOn=false;
+    const msg = e.name==='NotAllowedError'
+      ? 'Permiso de camara denegado.<br>Ve a Ajustes del navegador → Permisos → Camara.'
+      : 'No se pudo abrir la camara.<br>Toca para reintentar.';
+    box.innerHTML=`<div class="cam-off" onclick="initCam()"><i class="ti ti-camera"></i><p>${msg}</p></div>`;
+  }
+}
+function stopCam(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  camOn=false;
+}
+async function snapPhoto(){
+  const vid=document.getElementById('camVideo');
+  const cnv=document.getElementById('camCanvas');
+  if(!vid||!cnv) return;
+  const st=document.getElementById('camStatus');
+  if(st) st.textContent='Analizando...';
+  cnv.width=vid.videoWidth||640;cnv.height=vid.videoHeight||480;
+  cnv.getContext('2d').drawImage(vid,0,0);
+  const b64=cnv.toDataURL('image/jpeg',.85).split(',')[1];
+  if(CLAUDE_KEY) await visionScan(b64);
+  else demoScan(st);
+}
+function demoScan(st){
+  const code=DEMO[demoIdx%DEMO.length];demoIdx++;
+  if(st) st.textContent='Demo — sin Vision IA';
+  renderCard(code);
+  toast('Modo demo. Activa Vision IA en Ajustes (icono arriba).');
+}
+async function visionScan(b64){
+  const st=document.getElementById('camStatus');
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':CLAUDE_KEY,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:80,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:'Identify this One Piece TCG card. Reply ONLY with the card code like OP14-060. If unknown, reply UNKNOWN.'}
+        ]}]
+      })
+    });
+    const d=await res.json();
+    const code=d.content?.[0]?.text?.trim().toUpperCase().replace(/\s/g,'')||'UNKNOWN';
+    if(st) st.textContent='Vision IA activa';
+    if(code==='UNKNOWN'||!/^[A-Z0-9]+-\d+/.test(code)) toast('No identificada. Mejora la iluminacion e intenta de nuevo.');
+    else renderCard(code);
+  } catch(e){
+    if(st) st.textContent='Error — revisa API key';
+    toast('Error Vision IA. Comprueba tu API key en Ajustes.');
+  }
+}
+
+// =========================================================
+// BUSQUEDA
+// =========================================================
+async function manualSearch(){
+  const q=document.getElementById('searchIn').value.trim().toUpperCase();
+  if(!q) return;
+  const k=Object.keys(DB).find(c=>c===q||DB[c].n.toUpperCase().includes(q));
+  if(k){renderCard(k);return;}
+  document.getElementById('scanResult').innerHTML=`<div class="loading"><i class="ti ti-loader-2 spin"></i> Buscando...</div>`;
+  try {
+    const r=await fetch(`https://optcgapi.com/api/v1/cards/${encodeURIComponent(q)}`);
+    if(r.ok){const d=await r.json();renderCardExternal(d);}
+    else document.getElementById('scanResult').innerHTML=`<div class="empty"><i class="ti ti-search-off"></i><p>Carta no encontrada.<br>Prueba el codigo exacto (ej: OP14-060)</p></div>`;
+  } catch(e){
+    document.getElementById('scanResult').innerHTML=`<div class="empty"><i class="ti ti-wifi-off"></i><p>Sin conexion o carta no en base de datos.</p></div>`;
+  }
+}
+
+// =========================================================
+// RENDER CARTA
+// =========================================================
+function renderCard(code){
+  const d=DB[code];
+  if(!d){
+    document.getElementById('scanResult').innerHTML=`<div class="empty"><i class="ti ti-search-off"></i><p>Carta no reconocida: ${code}</p></div>`;
+    return;
+  }
+  const qty=col[code]||0;
+  const syns=(d.syn||[]).map(s=>({code:s,...DB[s]})).filter(x=>x.n);
+  let altsHTML='';
+  if(d.alts?.length){
+    altsHTML=`<div style="margin-bottom:10px">
+      <div class="elabel" style="margin-bottom:6px">Versiones alternativas</div>
+      <div class="alts-row">
+        <div class="alt-c on" onclick="swapImg('${code}',this)">
+          <img src="${imgURL(code)}" onerror="this.style.opacity='.3'" loading="lazy"><span>Normal</span></div>
+        ${d.alts.map(a=>`<div class="alt-c" onclick="swapImgCode('${a}',this)">
+          <img src="${imgURL(a)}" onerror="this.style.opacity='.3'" loading="lazy"><span>Alt Art</span></div>`).join('')}
+      </div></div>`;
+  }
+  let synHTML='';
+  if(syns.length){
+    synHTML=`<div style="margin-top:2px">
+      <div class="syn-title">Sinergias</div>
+      <div class="syn-list">
+        ${syns.slice(0,4).map(s=>`<div class="syn-item" onclick="renderCard('${s.code}')">
+          <img class="syn-img" src="${imgURL(s.code)}" onerror="this.style.background='var(--bg4)'" loading="lazy">
+          <div class="syn-info">
+            <div class="syn-name">${s.n}</div>
+            <div class="syn-why">${synReason(d,s)}</div>
+          </div>
+          <span class="syn-score">S+</span>
+        </div>`).join('')}
+      </div></div>`;
+  }
+  document.getElementById('scanResult').innerHTML=`<div class="result">
+    <div class="rh">
+      <div class="cimg" id="mainImgWrap" onclick="openModal('${code}')">
+        <img id="mainImg" src="${imgURL(code)}" onerror="this.parentNode.innerHTML='<div class=cph><i class=ti ti-cards></i><span>${code}</span></div>'" loading="lazy">
+        ${d.alts?.length?'<span class="alt-dot">ALT</span>':''}
+      </div>
+      <div class="cmeta">
+        <div class="cn">${d.n}</div>
+        <div class="ccode">${code} · ${d.set} · ${d.r}</div>
+        <div class="badges">
+          <span class="badge bp">${d.col}</span>
+          <span class="badge bg">Coste ${d.c}</span>
+          ${d.pow!=='-'?`<span class="badge bt">${d.pow} POD</span>`:''}
+          ${d.ctr?`<span class="badge bd">${d.ctr} CTR</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--text3)">${d.cls}</div>
+      </div>
+    </div>
+    <div class="ebox"><div class="elabel">Efecto (ES)</div><div class="etext">${d.fxES}</div></div>
+    ${altsHTML}
+    <div class="prow">
+      <div class="pc"><div class="pl">Precio</div><div class="pv">${d.price.toFixed(2)}€</div></div>
+      <div class="pc"><div class="pl">7 dias</div><div class="pv ${d.dir}">${d.dir==='up'?'+':''}${d.ch.toFixed(1)}%</div></div>
+    </div>
+    ${qty?`<div style="font-size:12px;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:5px"><i class="ti ti-check"></i>Tienes ${qty} copia${qty>1?'s':''} en el baul</div>`:''}
+    <button class="add-btn" onclick="addCard('${code}')"><i class="ti ti-plus"></i> Anadir al baul</button>
+    ${synHTML}
+  </div>`;
+}
+
+function synReason(main,syn){
+  const r=[];
+  if(syn.t==='Event') r.push('Evento de soporte');
+  if(syn.cls===main.cls) r.push('Mismo grupo: '+syn.cls);
+  if(syn.fx?.includes('K.O.')) r.push('Motor de eliminacion');
+  if(syn.fx?.includes('Blocker')) r.push('Defensa de campo');
+  if(syn.ctr) r.push('Counter '+syn.ctr);
+  if(syn.fx?.includes('Donquixote')) r.push('Sinergia con equipo');
+  return r.slice(0,2).join(' · ')||'Sinergia de mazo Doffy';
+}
+
+function swapImg(code,el){
+  document.querySelectorAll('.alt-c').forEach(a=>a.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('mainImg').src=imgURL(code);
+}
+function swapImgCode(altCode,el){
+  document.querySelectorAll('.alt-c').forEach(a=>a.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('mainImg').src=imgURL(altCode);
+}
+
+function renderCardExternal(d){
+  const code=d.code||d.card_code||'';
+  document.getElementById('scanResult').innerHTML=`<div class="result">
+    <div class="rh">
+      <div class="cimg"><img src="${d.card_image||imgURL(code)}" onerror="this.style.display='none'" loading="lazy"></div>
+      <div class="cmeta">
+        <div class="cn">${d.card_name||code}</div>
+        <div class="ccode">${code}</div>
+        <div class="badges"><span class="badge bp">${d.card_color||'?'}</span></div>
+      </div>
+    </div>
+    <button class="add-btn" onclick="addCardSimple('${code}')"><i class="ti ti-plus"></i> Anadir al baul</button>
+  </div>`;
+}
+
+// =========================================================
+// MODAL CARTA COMPLETA (toca imagen)
+// =========================================================
+function openModal(code){
+  const d=DB[code];if(!d) return;
+  document.getElementById('modalContent').innerHTML=`
+    <button class="mc-close" onclick="document.getElementById('cardModal').classList.remove('on')"><i class="ti ti-x"></i></button>
+    <img class="mc-img" src="${imgURL(d.alts?.[0]||code)}" onerror="this.style.display='none'" loading="lazy">
+    <div style="font-size:17px;font-weight:700;margin-bottom:4px">${d.n}</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px">${code} · ${d.set} · ${d.r}</div>
+    <div class="badges" style="margin-bottom:12px">
+      <span class="badge bp">${d.col}</span><span class="badge bg">Coste ${d.c}</span>
+      ${d.pow!=='-'?`<span class="badge bt">${d.pow} POD</span>`:''}
+      ${d.ctr?`<span class="badge bd">${d.ctr} CTR</span>`:''}
+    </div>
+    <div class="ebox"><div class="elabel">Efecto (Español)</div><div class="etext">${d.fxES}</div></div>
+    <div class="ebox" style="margin-top:8px"><div class="elabel">Effect (English)</div><div class="etext" style="color:var(--text3)">${d.fx}</div></div>
+    ${d.alts?.length?`<div class="ebox" style="margin-top:8px">
+      <div class="elabel">Art alternativo disponible</div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        ${d.alts.map(a=>`<img src="${imgURL(a)}" style="width:56px;height:78px;border-radius:6px;object-fit:cover;cursor:pointer" onclick="this.parentNode.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.src='${imgURL(a)}'" loading="lazy">`).join('')}
+      </div></div>`:''}`;
+  document.getElementById('cardModal').classList.add('on');
+}
+
+// =========================================================
+// BAUL
+// =========================================================
+function addCard(code){col[code]=(col[code]||0)+1;saveCol();updateBaul();updateDecks();toast('Carta anadida al baul');renderCard(code);}
+function addCardSimple(code){col[code]=(col[code]||0)+1;saveCol();updateBaul();toast('Carta anadida al baul');}
+function filterCol(f,btn){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));btn.classList.add('on');renderCol(f);}
+function updateBaul(){
+  let tot=0,val=0;
+  Object.keys(col).forEach(k=>{tot+=col[k];val+=(DB[k]?.price||0)*col[k];});
+  document.getElementById('totC').textContent=tot;
+  document.getElementById('totV').textContent=val.toFixed(2)+'€';
+  renderCol('all');
+}
+function renderCol(f){
+  const list=document.getElementById('colList');
+  const keys=Object.keys(col).filter(k=>f==='all'||(f==='Purple'?DB[k]?.col==='Purple':k.startsWith(f)));
+  if(!keys.length){list.innerHTML=`<div class="empty"><i class="ti ti-package"></i><p>Baul vacio o sin cartas en este filtro.</p></div>`;return;}
+  list.innerHTML=keys.map(code=>{
+    const d=DB[code];const qty=col[code];
+    return `<div class="ci">
+      <img class="ci-img" src="${imgURL(code)}" onerror="this.style.background='var(--bg4)';this.src=''" loading="lazy">
+      <div class="ci-info">
+        <div class="ci-name">${d?.n||code}</div>
+        <div class="ci-code">${code}</div>
+        <div class="qr">
+          <button class="qb" onclick="chQty('${code}',-1)">−</button>
+          <span class="qn">${qty}</span>
+          <button class="qb" onclick="chQty('${code}',+1)">+</button>
+        </div>
+      </div>
+      <div class="ci-r">
+        <div class="ci-price">${((d?.price||0)*qty).toFixed(2)}€</div>
+        <div class="ci-pu">${(d?.price||0).toFixed(2)}€/ud</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function chQty(code,d){col[code]=(col[code]||0)+d;if(col[code]<=0)delete col[code];saveCol();updateBaul();updateDecks();}
+
+// =========================================================
+// MAZOS
+// =========================================================
+const META=[
+  {name:'Purple Doflamingo',leader:'OP14-060',tier:'Tier 3',wr:52,core:['OP10-065','OP14-067','OP14-061','OP14-074','OP10-071','OP14-069','OP13-076']},
+  {name:'Purple Enel',leader:'OP15-058',tier:'Tier 1',wr:64,core:[]},
+  {name:'Green Mihawk',leader:'OP14-020',tier:'Tier 2',wr:57,core:[]},
+  {name:'Blue/Yellow Nami',leader:'OP15-???',tier:'Tier 1',wr:61,core:[]},
+];
+function deckTab(id,btn){
+  ['suggest','create'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.style.display=t===id?'block':'none';});
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+}
+function updateDecks(){
+  const have=new Set(Object.keys(col));
+  const el=document.getElementById('deckList');
+  if(!have.size){el.innerHTML=`<div class="empty"><i class="ti ti-cards"></i><p>Anade cartas a tu baul para ver mazos.</p></div>`;return;}
+  el.innerHTML=META.map(deck=>{
+    const tot=deck.core.length;
+    const got=deck.core.filter(c=>have.has(c)).length;
+    const pct=tot?Math.round(got/tot*100):0;
+    const miss=deck.core.filter(c=>!have.has(c));
+    const tc=deck.tier==='Tier 1'?'t1':deck.tier==='Tier 2'?'t2':'t3';
+    return `<div class="dc">
+      <div class="dt">
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+            <span class="dn">${deck.name}</span><span class="tier ${tc}">${deck.tier}</span>
+          </div>
+          <div class="ds">Lider: ${deck.leader}</div>
+        </div>
+        <span class="wr">${deck.wr}% WR</span>
+      </div>
+      ${tot?`<div class="pb"><div class="pf" style="width:${pct}%"></div></div>
+      <div class="df">
+        <span class="dm">${miss.length?'Faltan: <b>'+miss.slice(0,2).join(', ')+(miss.length>2?' +'+(miss.length-2):'')+'</b>':''}</span>
+        <span class="tier ${pct===100?'t1':'t3'}">${pct===100?'Listo!':got+'/'+tot}</span>
+      </div>`:'<div style="font-size:12px;color:var(--text3);margin-top:6px">Agrega cartas para ver compatibilidad</div>'}
+      <div class="das">
+        <button class="bs" onclick="askAI('Decklist completa de ${deck.name} para OP15 con analisis de matchups')">Ver lista</button>
+        <button class="bs" onclick="askAI('Que cartas comprar para completar ${deck.name} en OP15?')">Que comprar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function genDeck(){const l=document.getElementById('deckLeader').value;askAI(`Generame el mazo mas competitivo con lider ${l} para formato OP15 con decklist completa y prioridad de compra.`);}
+
+// =========================================================
+// IA
+// =========================================================
+const KB=[
+  {k:'precio',r:'Las mas valiosas: OP10-071 Doflamingo 8c (15.32€, +18.4%) y ST18-001 Uso-Hachi (15.51€, +22%). Uso-Hachi sigue subiendo por demanda en torneos OP15.'},
+  {k:'mazo',r:'Con tu coleccion tienes el core del Purple Doffy OP15. Te faltan principalmente Rosinante OP10-072 (~6.78€) y una cuarta Divine Departure para nivel torneo.'},
+  {k:'meta',r:'Meta OP15: Purple Enel y Blue/Yellow Nami son Tier 1 (~64% WR). Green Mihawk y Lucy en Tier 2. Purple Doffy es Tier 3 pero viable con buena ejecucion.'},
+  {k:'comprar',r:'Prioridad para tu Doffy: 1) 2x OP10-072 Rosinante (14€), 2) 1x OP13-076 Divine Departure (2.5€), 3) 2x OP12-076 Monet (3€). Total ~20€.'},
+  {k:'sinergia',r:'Sinergias clave del Doffy morado: Sugar OP10-065 para tutorear el mazo, Divine Departure OP13-076 como counter 0-cost, Rosinante OP10-072 para activar eventos en turno enemigo.'},
+  {k:'enel',r:'Matchup Doffy vs Enel (dificil): Enel limita tu ramp con su efecto DON!!. Usa Uso-Hachi para bloquear sus eventos y Vergo para aguantar ataques.'},
+  {k:'divine',r:'Divine Departure OP13-076 es imprescindible: coste 0, da +2000 Y bloquea la mano del rival. En OP15 es el mejor counter del formato morado.'},
+];
+function sendMsg(){
+  const inp=document.getElementById('aiIn');const q=inp.value.trim();if(!q)return;
+  inp.value='';addBubble(q,'user');
+  const match=KB.find(r=>q.toLowerCase().includes(r.k));
+  const ans=match?match.r:'Buena pregunta. Para analisis mas detallado te recomiendo ver la decklist en la seccion Mazos o consultar onepiece.limitlesstcg.com para listas de torneo actualizadas.';
+  setTimeout(()=>addBubble(ans,'bot'),600);
+}
+function askAI(q){goNav('ia',document.querySelectorAll('.nb')[3]);document.getElementById('aiIn').value=q;sendMsg();}
+function addBubble(txt,who){
+  const msgs=document.getElementById('aiMsgs');
+  const div=document.createElement('div');
+  div.className=`ab ab-${who==='bot'?'bot':'user'}`;
+  div.innerHTML=`<div class="aw aw-${who==='bot'?'b':'u'}">${who==='bot'?'Asistente OPTCG':'Tu'}</div>${txt}`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+
+// =========================================================
+// UTILS
+// =========================================================
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2600);
+}
+
+// =========================================================
+// INIT
+// =========================================================
+updateBaul();updateDecks();
+document.getElementById('searchIn').addEventListener('keydown',e=>{if(e.key==='Enter')manualSearch();});
+if(!CLAUDE_KEY) setTimeout(()=>toast('Activa Vision IA en el icono de ajustes (arriba)'),1500);
+initCam();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>
